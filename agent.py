@@ -2,9 +2,6 @@ import os
 import google.generativeai as genai
 from crewai import Agent, Task, Crew, LLM
 
-# --- Set your Gemini API key ---
-os.environ["GEMINI_API_KEY"] = "AIzaSyCGAeB6RL5LMJ1n9sa4pKNfdbZsH4bnqi8"
-
 # --- Configure Gemini SDK ---
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
