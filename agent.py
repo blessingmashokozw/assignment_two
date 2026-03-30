@@ -1,12 +1,34 @@
 import os
+import google.generativeai as genai
 from crewai import Agent, Task, Crew, LLM
 
-# --- Set your API key ---
-# os.environ["OPENAI_API_KEY"] = "your_api_key_here"
+# --- Set your Gemini API key ---
+os.environ["GEMINI_API_KEY"] = "AIzaSyCGAeB6RL5LMJ1n9sa4pKNfdbZsH4bnqi8"
+
+# --- Configure Gemini SDK ---
+genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+
+# --- Dynamically pick a Gemini model ---
+def get_default_gemini_model():
+    # List all models
+    models = list(genai.list_models())
+    # Filter only those that support generateContent
+    content_models = [m for m in models if "generateContent" in m.supported_generation_methods]
+    # Prefer pro, fallback to flash
+    for m in content_models:
+        if "gemini-1.5-pro" in m.name:
+            return m.name
+    for m in content_models:
+        if "gemini-1.5-flash" in m.name:
+            return m.name
+    # Fallback: just return the first available
+    return content_models[0].name if content_models else None
+
+model_name = get_default_gemini_model()
+print(f"Using Gemini model: {model_name}")
 
 # --- Define the LLM using CrewAI's wrapper ---
-llm = LLM(provider="anthropic", model="claude-3-opus", temperature=0)
-
+llm = LLM(provider="google", model=model_name, temperature=0)
 
 # --- Shared Agents ---
 planning_agent = Agent(
@@ -106,8 +128,5 @@ def run_devops_agent(task_type: str, input_data: str):
 
 # --- Example Runs ---
 if __name__ == "__main__":
-    # CI/CD Example
     run_devops_agent("cicd", "ERROR: ModuleNotFoundError: No module named 'requests'")
-
-    # Kubernetes Example
     run_devops_agent("k8s", "status=CrashLoopBackOff, reason=OOMKilled")
